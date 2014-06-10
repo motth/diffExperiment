@@ -1,0 +1,2 @@
+# Ignore Qt Creator .pro.user files
+*.pro.user
