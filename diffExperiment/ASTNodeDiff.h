@@ -24,20 +24,18 @@
 **
 ***********************************************************************************************************************/
 
-#ifndef ASTNODEDIFF_H
-#define ASTNODEDIFF_H
+#pragma once
 
-#include <astnode.h>
+#include "ASTNode.h"
 
-typedef enum {AddedNode, DeletedNode, ModifiedNode} nodeChangeType;
+enum nodeChangeType {AddedNode, DeletedNode, ModifiedNode};
 
-typedef enum {MovedLocation, UnchangedLocation} nodeLocationChangeType;
+enum nodeLocationChangeType {MovedLocation, UnchangedLocation};
 
 class ASTNodeDiff
 {
 	public:
 		ASTNodeDiff(int id);
-		~ASTNodeDiff();
 
 		void setNodeChangeType(nodeChangeType changeType);
 
@@ -51,16 +49,16 @@ class ASTNodeDiff
 		void print();
 
 	private:
-		int id_;
+		int id_{};
 
 		nodeChangeType nodeChangeType_;
 		nodeLocationChangeType nodeLocationChangeType_;
-		bool reordered_;
-		bool valueUpdated_;
-		bool typeChanged_;
+		bool reordered_{};
+		bool valueUpdated_{};
+		bool typeChanged_{};
 
-		ASTNode* newNode_;
-		ASTNode* oldNode_;
+		ASTNode* newNode_{};
+		ASTNode* oldNode_{};
 };
 
 inline void ASTNodeDiff::setNodeChangeType(nodeChangeType changeType) {ASTNodeDiff::nodeChangeType_ = changeType;}
@@ -71,5 +69,3 @@ inline void ASTNodeDiff::setValueUpdated(bool valueUpdated) {ASTNodeDiff::valueU
 
 inline void ASTNodeDiff::setNewNode(ASTNode* newNode) {ASTNodeDiff::newNode_ = newNode;}
 inline void ASTNodeDiff::setOldNode(ASTNode* oldNode) {ASTNodeDiff::oldNode_ = oldNode;}
-
-#endif // ASTNODEDIFF_H

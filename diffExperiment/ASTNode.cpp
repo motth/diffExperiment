@@ -24,19 +24,15 @@
 **
 ***********************************************************************************************************************/
 
-#include "astnode.h"
+#include "ASTNode.h"
 
 #include <QDebug>
 #include <QString>
 
+#include <iostream>
+
 ASTNode::ASTNode()
 {
-	ASTNode::depth_ = -1;
-	ASTNode::name_ = QString();
-	ASTNode::type_ = QString();
-	ASTNode::id_ = -1;
-	ASTNode::value_ = QString();
-
 	ASTNode::diffLineType_ = UnchangedLine;
 }
 
@@ -51,18 +47,14 @@ ASTNode::ASTNode(const char* line, size_t lineLength, char diffLineType)
 					 break;
 		case ' ': ASTNode::diffLineType_ = UnchangedLine;
 					 break;
+		default: Q_ASSERT(false);
 	}
 }
 
-ASTNode::~ASTNode()
+void ASTNode::print()
 {
-	//TODO
-}
-
-
-void ASTNode::printNode()
-{
-	qDebug() << "Node ID:" << ASTNode::id_ << ASTNode::name_ << ASTNode::type_ << ASTNode::value_;
+	std::cout << "Node ID:" << ASTNode::id_ << " " << qPrintable(ASTNode::name_) << " "
+				 << qPrintable(ASTNode::type_) << " " << qPrintable(ASTNode::value_) << std::endl;
 }
 
 

@@ -24,21 +24,19 @@
 **
 ***********************************************************************************************************************/
 
-#ifndef ASTNODE_H
-#define ASTNODE_H
+#pragma once
 
 #include <QString>
 
-typedef enum {UnchangedLine, AddedLine, DeletedLine} gitDiffLineType;
+enum gitDiffLineType {UnchangedLine, AddedLine, DeletedLine};
 
 class ASTNode
 {
 	public:
 		ASTNode();
 		ASTNode(const char* line, size_t lineLength, char diffLineType);
-		~ASTNode();
 
-		void printNode();
+		void print();
 
 		QString getName();
 		QString getType();
@@ -50,10 +48,10 @@ class ASTNode
 	private:
 		void parseEnvisionLine(const char* line, size_t lineLength);
 
-		int depth_;
+		int depth_{};
 		QString name_;
 		QString type_;
-		int id_;
+		int id_{};
 		QString value_;
 
 		gitDiffLineType diffLineType_;
@@ -65,5 +63,3 @@ inline int ASTNode::getID() {return ASTNode::id_;}
 inline QString ASTNode::getValue() {return ASTNode::value_;}
 
 inline gitDiffLineType ASTNode::getDiffLineType() {return ASTNode::diffLineType_;}
-
-#endif // ASTNODE_H

@@ -24,11 +24,13 @@
 **
 ***********************************************************************************************************************/
 
-#include "gitrepository.h"
+#include "GitRepository.h"
 
 #include <QDebug>
 
-#include <diff.h>
+#include <iostream>
+
+#include "Diff.h"
 
 GitRepository::GitRepository(const char* path)
 {
@@ -60,12 +62,11 @@ void GitRepository::close()
 	git_repository_free(GitRepository::repository_);
 }
 
-
 void GitRepository::diff()
 {
 	// Get commits
-	int error;
-	git_object* obj;
+	int error = 0;
+	git_object* obj = nullptr;
 
 	// Get initial branch
 	obj = nullptr;
@@ -81,16 +82,16 @@ void GitRepository::diff()
 
 
 	// Print which commits were loaded
-	const git_oid* oid;
+	const git_oid* oid = nullptr;
 	char shortsha[10] = {0};
 	// initial SHA
 	oid = git_commit_id(initialCommit);
 	git_oid_tostr(shortsha, 9, oid);
-	qDebug() << "Branch 'initial' points to commit" << shortsha;
+	std::cout << "Branch 'initial' points to commit " << shortsha << std::endl;
 	// modified SHA
 	oid = git_commit_id(modifiedCommit);
 	git_oid_tostr(shortsha, 9, oid);
-	qDebug() << "Branch 'modified points to commit" << shortsha;
+	std::cout << "Branch 'modified points to commit " << shortsha << std::endl;
 
 
 	// get the tree from the commits
@@ -105,8 +106,6 @@ void GitRepository::diff()
 	Diff* diff = new Diff(GitRepository::repository_);
 	diff->diffTreeToTree(initialTree, modifiedTree);
 }
-
-
 
 
 // Private methods

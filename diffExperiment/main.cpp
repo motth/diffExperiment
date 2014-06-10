@@ -28,16 +28,11 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-#include "gitrepository.h"
-
-// Libgit2 playground: /home/motth/Documents/Experimental/libgit2-playground
-// Code repository: /home/motth/Documents/Experimental/thesis-experimental
+#include "GitRepository.h"
 
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
-
-
 
 	char repoPath[] = "/home/motth/Documents/Experimental/libgit2-playground/.git";
 	GitRepository myRepo(repoPath);

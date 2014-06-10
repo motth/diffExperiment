@@ -24,8 +24,7 @@
 **
 ***********************************************************************************************************************/
 
-#ifndef GITREPOSITORY_H
-#define GITREPOSITORY_H
+#pragma once
 
 #include <git2.h>
 
@@ -43,9 +42,7 @@ class GitRepository
 	private:
 		void checkError(int error);
 
-		const char* path_;
-		git_repository* repository_;
+		const char* path_{};
+		git_repository* repository_{};
 
 };
-
-#endif // GITREPOSITORY_H

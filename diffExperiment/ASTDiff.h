@@ -24,32 +24,24 @@
 **
 ***********************************************************************************************************************/
 
-#ifndef ASTDIFF_H
-#define ASTDIFF_H
+#pragma once
 
 #include <git2.h>
 
 #include <QHash>
 
-#include <astnodediff.h>
+#include "ASTNodeDiff.h"
 
-typedef struct ParsingData
+
+struct ParsingData
 {
-	QHash<int, ASTNode*>* astNodes;
-
-	ParsingData()
-	{
-		astNodes = new QHash<int, ASTNode*>();
-	}
-} diffParsingData;
+	QHash<int, ASTNode*> astNodes;
+};
 
 
 class ASTDiff
 {
 	public:
-		ASTDiff();
-		~ASTDiff();
-
 		void buildFromGitDiff(git_diff* gitDiff);
 
 		void print();
@@ -63,11 +55,9 @@ class ASTDiff
 
 		void moveDetection();
 
-		git_diff* gitDiff_;
-		diffParsingData gitDiffParsingData_;
-		QHash<int, ASTNodeDiff*>* nodeDiffHashTable_;
+		git_diff* gitDiff_{};
+		ParsingData gitDiffParsingData_;
+		QHash<int, ASTNodeDiff*> nodeDiffHashTable_;
 
-		QHash<int, ASTNode*>* modifiedNodes_;
+		QHash<int, ASTNode*> modifiedNodes_;
 };
-
-#endif // ASTDIFF_H

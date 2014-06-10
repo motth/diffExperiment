@@ -24,17 +24,13 @@
 **
 ***********************************************************************************************************************/
 
-#include "diff.h"
+#include "Diff.h"
 
 #include <QDebug>
 
 Diff::Diff(git_repository* repository)
 {
 	Diff::repository_ = repository;
-
-	Diff::modifiedNodes_ = new QHash<int, ASTNode*>();
-
-	Diff::nodeDiffHash_ = new QHash<int, ASTNodeDiff*>();
 
 	Diff::oldTree_ = nullptr;
 	Diff::newTree_ = nullptr;
@@ -43,11 +39,6 @@ Diff::Diff(git_repository* repository)
 
 	Diff::options_ = new git_diff_options();
 	initializeOptions();
-}
-
-Diff::~Diff()
-{
-	//TODO
 }
 
 void Diff::diffIndexToWorkdir()
@@ -126,120 +117,4 @@ void Diff::initializeOptions()
 	//options->old_prefix = 'a';
 	/**< defaults to "b" */
 	//options->new_prefix = 'b';
-}
-
-void Diff::postProcessDiff()
-{	
-	// TODO: Code cleanup
-
-	Diff::modifiedNodes_->clear();
-
-	Diff::nodeDiffHash_->clear();
-
-	QHash<int, ASTNode*>* nodes = new QHash<int, ASTNode*>;
-
-	// build categorization {added, deleted, modified}
-	QList<int> ids = nodes->keys();
-	QList<int>::iterator iter;
-	QHash<int, ASTNode*>::iterator nodeIter;
-	ASTNode* node;
-	ASTNodeDiff* nodeDiff;
-	for (iter = ids.begin(); iter != ids.end(); iter++)
-	{
-		if(nodes->count(*iter) == 1)
-		{
-			nodeIter = nodes->find(*iter);
-			node = nodeIter.value();
-			if (node->getDiffLineType() == AddedLine)
-			{
-
-				nodeDiff = new ASTNodeDiff(*iter);
-				nodeDiff->setNodeChangeType(AddedNode);
-				nodeDiff->setNewNode(node);
-
-				Diff::nodeDiffHash_->insert(*iter, nodeDiff);
-			}
-			else if (node->getDiffLineType() == DeletedLine)
-			{
-
-				nodeDiff = new ASTNodeDiff(*iter);
-				nodeDiff->setNodeChangeType(DeletedNode);
-				nodeDiff->setOldNode(node);
-
-				Diff::nodeDiffHash_->insert(*iter, nodeDiff);
-			}
-			else
-			{
-				qDebug() << "ERROR!";
-			}
-		}
-		else if (nodes->count(*iter) == 2)
-		{
-			nodeDiff = new ASTNodeDiff(*iter);
-			nodeDiff->setNodeChangeType(ModifiedNode);
-
-			nodeIter = nodes->find(*iter);
-			node = nodeIter.value();
-
-			if (node->getDiffLineType() == AddedLine)
-			{
-				nodeDiff->setNewNode(node);
-			}
-			else
-			{
-				nodeDiff->setOldNode(node);
-			}
-			Diff::modifiedNodes_->insertMulti(node->getID(), node);
-
-			nodeIter++;
-			node = nodeIter.value();
-
-			if (node->getDiffLineType() == AddedLine)
-			{
-				nodeDiff->setNewNode(node);
-			}
-			else
-			{
-				nodeDiff->setOldNode(node);
-			}
-			Diff::nodeDiffHash_->insert(*iter, nodeDiff);
-			Diff::modifiedNodes_->insertMulti(node->getID(), node);
-		}
-		else {
-			qDebug() << "Error!";
-		}
-	}
-
-	// check modified for value change
-	nodes = Diff::modifiedNodes_;
-	ids = nodes->keys();
-
-	QHash<int, ASTNodeDiff*>::iterator diffIter;
-
-	ASTNode* nodeA;
-	ASTNode* nodeB;
-	for (iter = ids.begin(); iter != ids.end(); iter++)
-	{
-		nodeIter = nodes->find(*iter);
-		nodeA = nodeIter.value();
-		nodeIter++;
-		nodeB = nodeIter.value();
-
-		// check for same name -> reordering detection
-		int reorder = QString::compare(nodeA->getName(), nodeB->getName());
-		diffIter = Diff::nodeDiffHash_->find(*iter);
-		nodeDiff = diffIter.value();
-		if (reorder != 0) {
-			nodeDiff->setReordered(true);
-		}
-		else {
-			nodeDiff->setReordered(false);
-		}
-
-		// check for same type -> type change
-		// TODO
-
-		// check for same value -> update
-		// TODO
-	}
 }

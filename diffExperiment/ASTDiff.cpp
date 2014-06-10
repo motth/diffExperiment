@@ -24,9 +24,11 @@
 **
 ***********************************************************************************************************************/
 
-#include "astdiff.h"
+#include "ASTDiff.h"
 
 #include <QDebug>
+
+#include <iostream>
 
 
 // === CALL-BACK FUNCTIONS ===
@@ -36,7 +38,7 @@ int gitDiffFileParsingCB(
 				 float progress,
 				 void *payload)
 {
-	qDebug() << delta->new_file.path;
+	std::cout << "\t" << delta->new_file.path << std::endl;
 	(void) payload;
 	(void) progress;
 	return 0;
@@ -48,12 +50,12 @@ int gitDiffLineParsingCB(
 				 const git_diff_line *line,
 				 void *payload)
 {
-	diffParsingData* data = (diffParsingData*) payload;
+	ParsingData* data = (ParsingData*) payload;
 
 	// create ASTNode and add to diffParsingData
 	ASTNode* node = new ASTNode(line->content, line->content_len, line->origin);
 
-	data->astNodes->insertMulti(node->getID(), node);
+	data->astNodes.insertMulti(node->getID(), node);
 
 	(void) delta;
 	(void) hunk;
@@ -63,20 +65,6 @@ int gitDiffLineParsingCB(
 
 // === ASTDiff Implementation ===
 
-ASTDiff::ASTDiff()
-{	
-	ASTDiff::gitDiff_ = nullptr;
-
-	ASTDiff::nodeDiffHashTable_ = new QHash<int, ASTNodeDiff*>();
-
-	ASTDiff::modifiedNodes_ = new QHash<int, ASTNode*>();
-}
-
-ASTDiff::~ASTDiff()
-{
-	// TODO
-}
-
 void ASTDiff::buildFromGitDiff(git_diff* gitDiff)
 {
 	ASTDiff::clear();
@@ -85,19 +73,19 @@ void ASTDiff::buildFromGitDiff(git_diff* gitDiff)
 
 	//ASTDiff::gitDiffParsingData_.astNodes = new QHash<int, ASTNode*>();
 
-	qDebug() << "Parsing Git Diff";
+	std::cout << "Parsing Git Diff:" << std::endl;
 	ASTDiff::parseGitDiff();
 
-	qDebug() << "Detecting Fundamental Operations";
+	std::cout << "Detecting Fundamental Operations" << std::endl;
 	ASTDiff::detectFundamentalOperations();
 
-	qDebug() << "Refining Classification";
+	std::cout << "Refining Classification" << std::endl;
 	ASTDiff::refineClassification();
 }
 
 void ASTDiff::print()
 {
-	QList<ASTNodeDiff*> nodeDiffs = ASTDiff::nodeDiffHashTable_->values();
+	QList<ASTNodeDiff*> nodeDiffs = ASTDiff::nodeDiffHashTable_.values();
 	QList<ASTNodeDiff*>::iterator nodeDiffIter;
 	for (nodeDiffIter = nodeDiffs.begin(); nodeDiffIter != nodeDiffs.end(); nodeDiffIter++)
 	{
@@ -105,16 +93,15 @@ void ASTDiff::print()
 	}
 }
 
-
 void ASTDiff::clear()
 {
 	ASTDiff::gitDiff_ = nullptr;
 
-	ASTDiff::nodeDiffHashTable_->clear();
+	ASTDiff::nodeDiffHashTable_.clear();
 
-	ASTDiff::modifiedNodes_->clear();
+	ASTDiff::modifiedNodes_.clear();
 
-	ASTDiff::gitDiffParsingData_.astNodes->clear();
+	ASTDiff::gitDiffParsingData_.astNodes.clear();
 }
 
 void ASTDiff::parseGitDiff()
@@ -124,143 +111,118 @@ void ASTDiff::parseGitDiff()
 
 void ASTDiff::detectFundamentalOperations()
 {
-	QHash<int, ASTNode*>* nodes = ASTDiff::gitDiffParsingData_.astNodes;
+	QHash<int, ASTNode*> nodes = ASTDiff::gitDiffParsingData_.astNodes;
 
-	QList<int> nodeIDs = nodes->uniqueKeys();
-	QList<int>::iterator idIter;
-	QHash<int, ASTNode*>::iterator nodeIter;
+	QList<int> nodeIDs = nodes.uniqueKeys();
+	QHash<int, ASTNode*>::iterator nodeIter = nodes.begin();
 
-	ASTNode* node;
-	ASTNodeDiff* nodeDiff;
+	ASTNode* node = nullptr;
+	ASTNodeDiff* nodeDiff = nullptr;
 
-	for (idIter = nodeIDs.begin(); idIter != nodeIDs.end(); idIter++)
+	for(int id : nodeIDs)
 	{
-		switch(nodes->count(*idIter))
+		switch(nodes.count(id))
 		{
 			case 1:
-				nodeIter = nodes->find(*idIter);
+				nodeIter = nodes.find(id);
 				node = nodeIter.value();
 				switch(node->getDiffLineType())
 				{
 					case AddedLine:
-						nodeDiff = new ASTNodeDiff(*idIter);
+						nodeDiff = new ASTNodeDiff(id);
 						nodeDiff->setNodeChangeType(AddedNode);
 						nodeDiff->setNewNode(node);
 
-						ASTDiff::nodeDiffHashTable_->insert(*idIter, nodeDiff);
+						ASTDiff::nodeDiffHashTable_.insert(id, nodeDiff);
 						break;
 					case DeletedLine:
-						nodeDiff = new ASTNodeDiff(*idIter);
+						nodeDiff = new ASTNodeDiff(id);
 						nodeDiff->setNodeChangeType(DeletedNode);
 						nodeDiff->setOldNode(node);
 
-						ASTDiff::nodeDiffHashTable_->insert(*idIter, nodeDiff);
+						ASTDiff::nodeDiffHashTable_.insert(id, nodeDiff);
 						break;
 					default:
-						// TODO
-						break;
+						Q_ASSERT(false);
 				}
 				break;
 			case 2:
-				nodeDiff = new ASTNodeDiff(*idIter);
+				nodeDiff = new ASTNodeDiff(id);
 				nodeDiff->setNodeChangeType(ModifiedNode);
 
-				nodeIter = nodes->find(*idIter);
+				nodeIter = nodes.find(id);
 				node = nodeIter.value();
 
-				if (node->getDiffLineType() == AddedLine)
-				{
-					nodeDiff->setNewNode(node);
-				}
-				else
-				{
-					nodeDiff->setOldNode(node);
-				}
+				Q_ASSERT(node->getID() == id);
 
-				ASTDiff::modifiedNodes_->insertMulti(node->getID(), node);
+				if (node->getDiffLineType() == AddedLine)
+					nodeDiff->setNewNode(node);
+				else
+					nodeDiff->setOldNode(node);
+
+				ASTDiff::modifiedNodes_.insertMulti(id, node);
 
 				nodeIter++;
 				node = nodeIter.value();
 
 				if (node->getDiffLineType() == AddedLine)
-				{
 					nodeDiff->setNewNode(node);
-				}
 				else
-				{
 					nodeDiff->setOldNode(node);
-				}
-				ASTDiff::modifiedNodes_->insertMulti(node->getID(), node);
-				ASTDiff::nodeDiffHashTable_->insert(*idIter, nodeDiff);
+				ASTDiff::modifiedNodes_.insertMulti(id, node);
+				ASTDiff::nodeDiffHashTable_.insert(id, nodeDiff);
 				break;
 			default:
-				// TODO default
-				break;
+				Q_ASSERT(false);
 		}
 	}
 }
 
-
 void ASTDiff::refineClassification()
 {
 
-	QList<int> nodeIDs = ASTDiff::modifiedNodes_->uniqueKeys();
-	QList<int>::iterator idIter;
-	QHash<int, ASTNode*>::iterator nodeIter;
-	QHash<int, ASTNodeDiff*>::iterator nodeDiffIter;
+	QList<int> nodeIDs = ASTDiff::modifiedNodes_.uniqueKeys();
+	QHash<int, ASTNode*>::iterator nodeIter = ASTDiff::modifiedNodes_.begin();
+	QHash<int, ASTNodeDiff*>::iterator nodeDiffIter = ASTDiff::nodeDiffHashTable_.begin();
 
-	ASTNode* nodeA;
-	ASTNode* nodeB;
+	ASTNode* nodeA = nullptr;
+	ASTNode* nodeB = nullptr;
 
 	ASTNodeDiff* nodeDiff;
-	for (idIter = nodeIDs.begin(); idIter != nodeIDs.end(); idIter++)
+	for (int id : nodeIDs)
 	{
-		nodeIter = ASTDiff::modifiedNodes_->find(*idIter);
+		nodeIter = ASTDiff::modifiedNodes_.find(id);
 		nodeA = nodeIter.value();
 		nodeIter++;
 		nodeB = nodeIter.value();
 
-		nodeDiffIter = ASTDiff::nodeDiffHashTable_->find(*idIter);
+		nodeDiffIter = ASTDiff::nodeDiffHashTable_.find(id);
 		nodeDiff = nodeDiffIter.value();
 
 		// check for same name -> reordering detection
 		int reorder = QString::compare(nodeA->getName(), nodeB->getName());
-		if (reorder != 0) {
+		if (reorder != 0)
 			nodeDiff->setReordered(true);
-		}
-		else {
+		else
 			nodeDiff->setReordered(false);
-		}
 
 		// check for same type -> type change
 		int typeChange = QString::compare(nodeA->getType(), nodeB->getType());
-		if (typeChange != 0) {
+		if (typeChange != 0)
 			nodeDiff->setTypeChanged(true);
-		}
-		else {
+		else
 			nodeDiff->setTypeChanged(false);
-		}
 
 		// check for same value -> update
 		int valueUpdate = QString::compare(nodeA->getValue(), nodeB->getValue());
-		if (valueUpdate != 0) {
+		if (valueUpdate != 0)
 			nodeDiff->setValueUpdated(true);
-		}
-		else {
+		else
 			nodeDiff->setValueUpdated(false);
-		}
 	}
-
 
 	// move detection
 	ASTDiff::moveDetection();
-
-
-
-
-
-
-
 }
 
 void ASTDiff::moveDetection()

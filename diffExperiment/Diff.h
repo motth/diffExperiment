@@ -24,24 +24,22 @@
 **
 ***********************************************************************************************************************/
 
-#ifndef DIFF_H
-#define DIFF_H
+#pragma once
 
 #include <git2.h>
 
 #include <QHash>
 
-#include <astdiff.h>
-#include <astnode.h>
-#include <astnodediff.h>
+#include "ASTDiff.h"
+#include "ASTNode.h"
+#include "ASTNodeDiff.h"
 
-typedef enum {IndexToWorkdir, TreeToWorkdir, TreeToIndex, TreeToTree} diffKind;
+enum diffKind {IndexToWorkdir, TreeToWorkdir, TreeToIndex, TreeToTree};
 
 class Diff
 {
 	public:
 		Diff(git_repository* repository);
-		~Diff();
 
 		void diffIndexToWorkdir();
 		void diffTreeToWorkdir(git_tree* oldTree);
@@ -53,22 +51,15 @@ class Diff
 		void checkError(int error);
 
 		void initializeOptions();
-		void postProcessDiff();
-
-		QHash<int, ASTNode*>* modifiedNodes_;
-
-		QHash<int, ASTNodeDiff*>* nodeDiffHash_;
 
 		ASTDiff* astDiff_;
 
 		diffKind diffKind_;
-		git_diff_options* options_;
-		git_diff* diff_;
+		git_diff_options* options_{};
+		git_diff* diff_{};
 
-		git_tree* oldTree_;
-		git_tree* newTree_;
+		git_tree* oldTree_{};
+		git_tree* newTree_{};
 
-		git_repository* repository_;
+		git_repository* repository_{};
 };
-
-#endif // DIFF_H

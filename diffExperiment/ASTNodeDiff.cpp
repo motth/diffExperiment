@@ -24,9 +24,11 @@
 **
 ***********************************************************************************************************************/
 
-#include "astnodediff.h"
+#include "ASTNodeDiff.h"
 
 #include <QDebug>
+
+#include <iostream>
 
 ASTNodeDiff::ASTNodeDiff(int id)
 {
@@ -42,41 +44,33 @@ ASTNodeDiff::ASTNodeDiff(int id)
 	ASTNodeDiff::oldNode_ = nullptr;
 }
 
-ASTNodeDiff::~ASTNodeDiff()
-{
-	// TODO
-}
-
 void ASTNodeDiff::print()
 {
 	switch (ASTNodeDiff::nodeChangeType_)
 	{
 		case AddedNode:
-			qDebug() << ASTNodeDiff::id_ << "ADD";
+			std::cout << ASTNodeDiff::id_ << " " << "ADD" << std::endl;
 			break;
 
 		case DeletedNode:
-			qDebug() << ASTNodeDiff::id_ << "DEL";
+			std::cout << ASTNodeDiff::id_ << " " << "DEL" << std::endl;
 			break;
 
 		case ModifiedNode:
-			qDebug() << ASTNodeDiff::id_ << "MOD";
+			std::cout << ASTNodeDiff::id_ << " " << "MOD";
 			if (ASTNodeDiff::nodeLocationChangeType_ == MovedLocation)
-			{
-				qDebug() << "\t" << "MOV";
-			}
+				std::cout << "\t" << "MOV" << std::endl;
 			else if (ASTNodeDiff::nodeLocationChangeType_ == UnchangedLocation)
-			{
-				qDebug() << "\t" << "NO MOV";
-			}
-			else {
-				qDebug() << "\t" << "ERROR!!!";
-			}
+				std::cout << "\t" << "NO MOV" << std::endl;
+			else
+				Q_ASSERT(false);
 
-				qDebug() << "\t" << "Reordered:" << ASTNodeDiff::reordered_ <<"|" << "Updated Value:" << ASTNodeDiff::valueUpdated_ << "|" << "Type Changed:" << ASTNodeDiff::typeChanged_;
+			std::cout << "\t" << "Reordered:" << ASTNodeDiff::reordered_ << " | "
+						 << "Updated Value:" << ASTNodeDiff::valueUpdated_ << " | "
+						 << "Type Changed:" << ASTNodeDiff::typeChanged_ << std::endl;
 			break;
 
 		default:
-			qDebug() << ASTNodeDiff::id_ << "ERROR!!!";
+			Q_ASSERT(false);
 	}
 }
